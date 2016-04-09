@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://haov.net/"/>
-  <updated>2016-04-09T08:34:59.000Z</updated>
+  <updated>2016-04-09T09:26:35.000Z</updated>
   <id>http://haov.net/</id>
   
   <author>
@@ -16,26 +16,27 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>MySQL server has gone away</title>
+    <title>MySQL server has gone away错误查找</title>
     <link href="http://haov.net/2015/MySQL-server-has-gone-away/"/>
     <id>http://haov.net/2015/MySQL-server-has-gone-away/</id>
     <published>2015-04-09T08:21:48.000Z</published>
-    <updated>2016-04-09T08:34:59.000Z</updated>
+    <updated>2016-04-09T09:26:35.000Z</updated>
     
-    <content type="html">&lt;p&gt;在测试服务器上发现一个PHP守护进程异常退出，查看日志发现报了&lt;code&gt;Warning: PDO::prepare(): MySQL server has gone away&lt;/code&gt; 的错误&lt;/p&gt;
-&lt;p&gt;一番查找发现是因为MySQL连接超时8小时不活动，MySQL就会关闭这个连接。&lt;/p&gt;
-&lt;p&gt;可以通过命令 &lt;code&gt;SHOW GLOBAL VARIABLES LIKE ‘%timeout’&lt;/code&gt; 查看 wait_timeout参数&lt;/p&gt;
-&lt;p&gt;php使用的是PDO操作数据库，一般都是短连接，php在脚本结束时会自动关闭连接。&lt;/p&gt;
-&lt;p&gt;通过查看代码，发现代码里有缓存PDO对象，php又是以守护进程的方式运行，连接MySQL之后并不会去关闭连接，在没有操作时连接会一直处在睡眠状态。&lt;br&gt;当守护进程启动后，通过 &lt;code&gt;SHOW PROCESSLIST&lt;/code&gt; 可以看到状态为Sleep&lt;/p&gt;
+    <content type="html">&lt;p&gt;在测试服务器上发现一个php守护进程异常退出，查看日志发现报了&lt;code&gt;Warning: PDO::prepare(): MySQL server has gone away&lt;/code&gt; 的错误&lt;/p&gt;
+&lt;p&gt;一番查找发现有几种情况会出现这个错误。&lt;br&gt;1、MySQL服务器宕机&lt;br&gt;2、连接长时间没有操作，MySQL发现连接超过wait_timeout所配置的时间，MySQL就会关闭这个连接&lt;br&gt;可以通过命令 &lt;code&gt;SHOW GLOBAL VARIABLES LIKE &amp;quot;%timeout&amp;quot;&lt;/code&gt; 查看 wait_timeout参数&lt;br&gt;3、当查询的结果集超过了max_allowed_packet设置的大小&lt;/p&gt;
+&lt;p&gt;MySQL服务正常第一条可以排除&lt;br&gt;max_allowed_packet 配置是16M，查询的数据肯定不会超过这个大小也可以排除&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;发现问题&lt;/strong&gt;&lt;br&gt;php使用的是PDO操作数据库，php在脚本结束时会自动关闭连接，应该不会有超时的问题&lt;br&gt;出问题的正好是守护进程，通过查看代码，发现代码里有缓存PDO对象，php又是以守护进程的方式运行，连接MySQL之后并不会去关闭连接，在没有操作时连接会一直处在睡眠状态。&lt;br&gt;当守护进程启动后，通过 &lt;code&gt;SHOW PROCESSLIST&lt;/code&gt; 可以看到状态为Sleep&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;测试服在晚上时基本没有操作，这样超过28800秒之后MySQL关闭了这个连接，当php再次处理数据时就报出了上面的错误。&lt;/p&gt;
-&lt;p&gt;这里也说了相关的问题&lt;br&gt;&lt;a href=&quot;http://stackoverflow.com/questions/7942154/mysql-error-2006-mysql-server-has-gone-away&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://stackoverflow.com/questions/7942154/mysql-error-2006-mysql-server-has-gone-away&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;当查询的结果集超过了max_allowed_packet也会出现这个错误。&lt;br&gt;可以通过命令 set global max_allowed_packet=xxxx来设置&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解决问题&lt;/strong&gt;&lt;br&gt;my.conf文件修改参数&lt;br&gt;wait_timeout=86400&lt;/p&gt;
+&lt;p&gt;相关问题&lt;br&gt;&lt;a href=&quot;http://stackoverflow.com/questions/7942154/mysql-error-2006-mysql-server-has-gone-away&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://stackoverflow.com/questions/7942154/mysql-error-2006-mysql-server-has-gone-away&lt;/a&gt;&lt;/p&gt;
 </content>
     
     <summary type="html">
     
-      &lt;p&gt;在测试服务器上发现一个PHP守护进程异常退出，查看日志发现报了&lt;code&gt;Warning: PDO::prepare(): MySQL server has gone away&lt;/code&gt; 的错误&lt;/p&gt;
-&lt;p&gt;一番查找发现是因为MySQL连接超时8小时不活动，MySQL
+      &lt;p&gt;在测试服务器上发现一个php守护进程异常退出，查看日志发现报了&lt;code&gt;Warning: PDO::prepare(): MySQL server has gone away&lt;/code&gt; 的错误&lt;/p&gt;
+&lt;p&gt;一番查找发现有几种情况会出现这个错误。&lt;br&gt;1、MySQL服务器宕机&lt;br&gt;2、连接长时间没有操作，MySQL发现连接超过wait_timeout所配置的时间，MySQL就会关闭这个连接&lt;br&gt;可以通过命令 &lt;code&gt;SHOW GLOBAL VARIABLES LIKE &amp;quot;%timeout&amp;quot;&lt;/code&gt; 查看 wait_timeout参数&lt;br&gt;3、当查询的结果集超过了max_allowed_packet设置的大小&lt;/p&gt;
+&lt;p&gt;MySQL服务正常第一条可以排除&lt;br&gt;max_allowed_packet 配置是16M，查询的数据肯定不会超过这个大小也可以排除&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;发现问题&lt;/strong&gt;&lt;br&gt;php使用的是PDO操作数据库，php在脚本结束时会自动关闭连接，应该不会有超时的问题&lt;br&gt;出问题的正好是守护进程，通过查看代码，发现代码里有缓存PDO对象，php又是以守护进程的方式运行，连接MySQL之后并不会去关闭连接，在没有操作时连接会一直处在睡眠状态。&lt;br&gt;当守护进程启动后，通过 &lt;code&gt;SHOW PROCESSLIST&lt;/code&gt; 可以看到状态为Sleep&lt;br&gt;
     
     </summary>
     
@@ -128,20 +129,22 @@
     <link href="http://haov.net/2014/AmazonAws%E4%BA%91%E6%9C%8D%E5%8A%A1%E4%BD%BF%E7%94%A8/"/>
     <id>http://haov.net/2014/AmazonAws云服务使用/</id>
     <published>2014-11-17T11:38:46.000Z</published>
-    <updated>2015-11-10T07:41:26.000Z</updated>
+    <updated>2016-04-09T09:19:48.000Z</updated>
     
     <content type="html">&lt;p&gt;最近项目要上google play，使用amazon aws云服务。&lt;/p&gt;
 &lt;p&gt;我们项目主要使用了ec2，rds，s3&lt;/p&gt;
-&lt;p&gt;###ec2服务器的登陆&lt;br&gt;linux下&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;windows下&lt;br&gt;推荐使用&lt;a href=&quot;http://www.netsarang.com/products/xsh_overview.html&quot; title=&quot;xshell&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;xshell&lt;/a&gt;，xshell可以直接使用public key&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;ec2服务器的登陆&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;linux&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;windows&lt;/p&gt;
+&lt;p&gt;推荐使用&lt;a href=&quot;http://www.netsarang.com/products/xsh_overview.html&quot; title=&quot;xshell&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;xshell&lt;/a&gt;，xshell可以直接使用public key&lt;/p&gt;
 &lt;p&gt;在用户身份验证项，类型选择public key，用户名ec2-user，用户密钥就是在amazonaws生成的xxx.pem文件&lt;/p&gt;
 &lt;p&gt;往服务器传文件可以使用scp&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ scp -i xxx.pem test.log ec2-user@xxx.compute.amazonaws.com:/tmp&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;p&gt;###登陆服务器后需要挂载硬盘&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ fdisk &lt;span class=&quot;_&quot;&gt;-l&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mkfs -t ext3 /dev/xvdb&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mkdir /data&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mount /dev/xvdb /data&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;###rds登陆&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;登陆服务器后需要挂载硬盘&lt;/strong&gt;&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ fdisk &lt;span class=&quot;_&quot;&gt;-l&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mkfs -t ext3 /dev/xvdb&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mkdir /data&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mount /dev/xvdb /data&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;rds登陆&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;对于mysql的管理在windows下推荐使用&lt;a href=&quot;https://www.webyog.com/&quot; title=&quot;SQLyog&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;SQLyog&lt;/a&gt;，相当的好用。&lt;/p&gt;
-&lt;p&gt;登陆亚马逊的rds需要使用http隧道的方式，用http的方式有一点不太方便的就是需要php环境的支持&lt;/p&gt;
-&lt;p&gt;###s3&lt;br&gt;我们使用s3主要是游戏包的更新下载&lt;/p&gt;
+&lt;p&gt;登陆亚马逊的rds需要使用http隧道的方式，用http的方式需要php环境的支持&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;s3&lt;/strong&gt;&lt;br&gt;我们使用s3主要是游戏包的更新下载&lt;/p&gt;
 &lt;p&gt;文件上传在amazonaws面板进行，上传完成后看到的是一个私有的链接，需要手动创建公开链接，文件点击右键，点击make public之后就得到可以对外的公开链接。&lt;/p&gt;
 </content>
     
@@ -149,8 +152,10 @@
     
       &lt;p&gt;最近项目要上google play，使用amazon aws云服务。&lt;/p&gt;
 &lt;p&gt;我们项目主要使用了ec2，rds，s3&lt;/p&gt;
-&lt;p&gt;###ec2服务器的登陆&lt;br&gt;linux下&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;windows下&lt;br&gt;推荐使用&lt;a href=&quot;http://www.netsarang.com/products/xsh_overview.html&quot; title=&quot;xshell&quot;&gt;xshell&lt;/a&gt;，xshell可以直接使用public key&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;ec2服务器的登陆&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;linux&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;windows&lt;/p&gt;
+&lt;p&gt;推荐使用&lt;a href=&quot;http://www.netsarang.com/products/xsh_overview.html&quot; title=&quot;xshell&quot;&gt;xshell&lt;/a&gt;，xshell可以直接使用public key&lt;/p&gt;
 &lt;p&gt;在用户身份验证项，类型选择public key，用户名ec2-user，用户密钥就是在amazonaws生成的xxx.pem文件&lt;/p&gt;
 &lt;p&gt;往服务器传文件可以使用scp&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ scp -i xxx.pem test.log ec2-user@xxx.compute.amazonaws.com:/tmp&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
     
