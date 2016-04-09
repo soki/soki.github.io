@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>soki</title>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://haov.net/"/>
+  <updated>2016-04-09T08:34:59.000Z</updated>
+  <id>http://haov.net/</id>
+  
+  <author>
+    <name>soki</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>MySQL server has gone away</title>
+    <link href="http://haov.net/2015/MySQL-server-has-gone-away/"/>
+    <id>http://haov.net/2015/MySQL-server-has-gone-away/</id>
+    <published>2015-04-09T08:21:48.000Z</published>
+    <updated>2016-04-09T08:34:59.000Z</updated>
+    
+    <content type="html">&lt;p&gt;在测试服务器上发现一个PHP守护进程异常退出，查看日志发现报了&lt;code&gt;Warning: PDO::prepare(): MySQL server has gone away&lt;/code&gt; 的错误&lt;/p&gt;
+&lt;p&gt;一番查找发现是因为MySQL连接超时8小时不活动，MySQL就会关闭这个连接。&lt;/p&gt;
+&lt;p&gt;可以通过命令 &lt;code&gt;SHOW GLOBAL VARIABLES LIKE ‘%timeout’&lt;/code&gt; 查看 wait_timeout参数&lt;/p&gt;
+&lt;p&gt;php使用的是PDO操作数据库，一般都是短连接，php在脚本结束时会自动关闭连接。&lt;/p&gt;
+&lt;p&gt;通过查看代码，发现代码里有缓存PDO对象，php又是以守护进程的方式运行，连接MySQL之后并不会去关闭连接，在没有操作时连接会一直处在睡眠状态。&lt;br&gt;当守护进程启动后，通过 &lt;code&gt;SHOW PROCESSLIST&lt;/code&gt; 可以看到状态为Sleep&lt;/p&gt;
+&lt;p&gt;测试服在晚上时基本没有操作，这样超过28800秒之后MySQL关闭了这个连接，当php再次处理数据时就报出了上面的错误。&lt;/p&gt;
+&lt;p&gt;这里也说了相关的问题&lt;br&gt;&lt;a href=&quot;http://stackoverflow.com/questions/7942154/mysql-error-2006-mysql-server-has-gone-away&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://stackoverflow.com/questions/7942154/mysql-error-2006-mysql-server-has-gone-away&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;当查询的结果集超过了max_allowed_packet也会出现这个错误。&lt;br&gt;可以通过命令 set global max_allowed_packet=xxxx来设置&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在测试服务器上发现一个PHP守护进程异常退出，查看日志发现报了&lt;code&gt;Warning: PDO::prepare(): MySQL server has gone away&lt;/code&gt; 的错误&lt;/p&gt;
+&lt;p&gt;一番查找发现是因为MySQL连接超时8小时不活动，MySQL
+    
+    </summary>
+    
+    
+      <category term="MySQL php" scheme="http://haov.net/tags/MySQL-php/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>transfer-closed-with-outstanding-read-data-remaining</title>
+    <link href="http://haov.net/2015/transfer-closed-with-outstanding-read-data-remaining/"/>
+    <id>http://haov.net/2015/transfer-closed-with-outstanding-read-data-remaining/</id>
+    <published>2015-02-13T08:22:53.000Z</published>
+    <updated>2016-04-09T08:15:01.000Z</updated>
+    
+    <content type="html">&lt;p&gt;最近有个别用户反映一直进不去游戏，卡在登录画面。经过排查发现客户端调用某接口的时候数据获取不全，通过抓包发现只要获取到一定数据量时，客户端就主动把连接关闭。客户端使用libcurl，所以我在命令行里也用curl模拟了一次请求，发现也是在获取到一定的数据后就出现 &lt;code&gt;transfer closed with outstanding read data remaining&lt;/code&gt; 的错误，而且还是必现。&lt;/p&gt;
+&lt;p&gt;经过一翻google发现了一些可能引起错误的原因&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Expect: 100-continue&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;当客户端要post较大的数据时，客户端会先发送一个包含 Expect: 100-continue 的头信息，询问服务器是否接受请求，如果接受，服务器返回100-continue，客户端再post数据。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;我们post的数据才几十字节而已，这个问题基本可以忽略。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;继续排查&lt;/p&gt;
+&lt;p&gt;经过调试发现在浏览器上请求接口正常，而curl请求始终失败出错。经过对比头信息，发现浏览器上多了 &lt;code&gt;Content-Encoding:gzip&lt;/code&gt; 头，&lt;code&gt;curl&lt;/code&gt; 启用 &lt;code&gt;-compressed&lt;/code&gt; 参数后也正常了。&lt;/p&gt;
+&lt;p&gt;客户端查看代码确实也没有启用&lt;code&gt;gzip&lt;/code&gt;，加上&lt;code&gt;gzip&lt;/code&gt;，更新版本，问题玩家登录一切正常，问题解决。&lt;/p&gt;
+&lt;p&gt;压缩也只是把数据变小，上面说到的接口只有个别的用户会出现问题，对比正常玩家和出问题的玩家，发现返回的数据大小在一个分界线，到达一定数据大小时必现。可以肯定是跟&lt;code&gt;php&lt;/code&gt; &lt;code&gt;nginx&lt;/code&gt;大数据包有关系。&lt;/p&gt;
+&lt;p&gt;在我们内网的测试环境，进入游戏时会调用一个数据非常大的接口，外网不会调用，按这种情况内网必定会出现错误才对。但是内网却没有问题。未完待续。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近有个别用户反映一直进不去游戏，卡在登录画面。经过排查发现客户端调用某接口的时候数据获取不全，通过抓包发现只要获取到一定数据量时，客户端就主动把连接关闭。客户端使用libcurl，所以我在命令行里也用curl模拟了一次请求，发现也是在获取到一定的数据后就出现 &lt;code&gt;transfer closed with outstanding read data remaining&lt;/code&gt; 的错误，而且还是必现。&lt;/p&gt;
+&lt;p&gt;经过一翻google发现了一些可能引起错误的原因&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Expect: 100-continue&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;当客户端要post较大的数据时，客户端会先发送一个包含 Expect: 100-continue 的头信息，询问服务器是否接受请求，如果接受，服务器返回100-continue，客户端再post数据。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="curl" scheme="http://haov.net/tags/curl/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>浮点数二进制表示</title>
+    <link href="http://haov.net/2014/%E6%B5%AE%E7%82%B9%E6%95%B0%E4%BA%8C%E8%BF%9B%E5%88%B6%E8%A1%A8%E7%A4%BA/"/>
+    <id>http://haov.net/2014/浮点数二进制表示/</id>
+    <published>2014-12-11T07:42:11.000Z</published>
+    <updated>2016-04-09T08:19:31.000Z</updated>
+    
+    <content type="html">&lt;p&gt;看了鸟哥博客的&lt;a href=&quot;http://www.laruence.com/2013/03/26/2884.html&quot; title=&quot;PHP浮点数的一个常见问题的解答&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;一篇文章&lt;/a&gt;后，对IEEE754浮点数表示不太明白。&lt;/p&gt;
+&lt;figure class=&quot;highlight php&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$a = &lt;span class=&quot;number&quot;&gt;0.58&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$b = &lt;span class=&quot;number&quot;&gt;100&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;var_dump(intval($a * $b)); &lt;span class=&quot;comment&quot;&gt;//输出57&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;为什么是57，这就得知道浮点数的二进制表示了称之为国际标准IEEE 754&lt;/p&gt;
+&lt;p&gt;在网上看了几篇文章，看了《深入理解计算机原理》2.4章浮点数之后对浮点数的二进制表示有了些理解，做下记录。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;p&gt;&lt;strong&gt;二进制小数&lt;/strong&gt;&lt;br&gt;根据小数点符号&lt;code&gt;.&lt;/code&gt;，左边是权2的正幂，右边是2的负幂&lt;br&gt;例如二进制小数101.11就表示&lt;br&gt;&lt;code&gt;1*2^2 + 0*2^1 + 1*2^0 + 1*2^-1 + 1*2^-2&lt;/code&gt;&lt;br&gt;&lt;code&gt;4 + 0 + 1 + 1/2 + 1/4 = 5 + 3/4&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;向左移动二进制小数点一位相当于这个数被2除&lt;br&gt;例如 10.111 表示为 &lt;code&gt;2 + 0 + 1/2 + 1/4 + 1/8&lt;/code&gt;&lt;br&gt;向右移动一位相当于将该数乘以2&lt;br&gt;例如 1011.1 表示为 &lt;code&gt;8 + 0 + 2 + 1 + 1/2&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;十进制小数&lt;/strong&gt;&lt;br&gt;整数部分：除二取余，商继续除二直到商为0或1为止，然后倒序排列&lt;br&gt;小数部分：小数乘2取整，小数部分继续乘2，循环这个操作得到小数部分为0止&lt;/p&gt;
+&lt;p&gt;例如十进制数5.6二进制表示&lt;br&gt;&lt;em&gt;整数 5&lt;/em&gt;&lt;br&gt;    &lt;code&gt;[5 / 2 = 2] 1&lt;/code&gt;&lt;br&gt;    &lt;code&gt;[2 / 2 = 1] 0&lt;/code&gt;&lt;br&gt;    &lt;code&gt;1&lt;/code&gt;&lt;br&gt;&lt;em&gt;小数 0.6&lt;/em&gt;&lt;br&gt;    &lt;code&gt;［0.6 * 2 = 1.2］1，0.2&lt;/code&gt;&lt;br&gt;    &lt;code&gt;［0.2 * 2 = 0.4］0，0.4&lt;/code&gt;&lt;br&gt;    &lt;code&gt;［0.4 * 2 = 0.8］0，0.8&lt;/code&gt;&lt;br&gt;    &lt;code&gt;［0.8 * 2 = 1.6］1，0.6&lt;/code&gt;&lt;br&gt;    &lt;code&gt;［0.6 * 2 = 1.2］1，0.2&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;二进制为 101.10011…&lt;br&gt;这样下去会是一个无穷的数，那么到底取到多少位呢？&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;IEEE浮点表示&lt;/strong&gt;&lt;br&gt;根据国际标准IEEE 754，任意一个二进制浮点数V可以表示成下面的形式：&lt;br&gt;&lt;code&gt;V = (-1)^s x M x 2^E&lt;/code&gt;&lt;br&gt;&lt;strong&gt;符号&lt;/strong&gt;：(-1)^s表示符号位，s=0表示正数，s=1表示负数&lt;br&gt;&lt;strong&gt;有效数&lt;/strong&gt;：M是一个二进制小数，范围大于等于1小于2。&lt;br&gt;&lt;strong&gt;指数&lt;/strong&gt;：E是2的幂，它的作用是对浮点数加权&lt;/p&gt;
+&lt;p&gt;例如，十进制5.6，写成二进制小数是101.10011…（这里只取到5位小数），&lt;code&gt;1 ≤ M ≤ 2&lt;/code&gt; 那么 &lt;code&gt;M = 1.0110011 x 2 ^ 2&lt;/code&gt;&lt;br&gt;那么，根据上面格式，可以得出s=0，M=1.0110011…，E=2&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;标准规定&lt;/strong&gt; 单精度浮点格式(32位)，最高1位为符号s，接下来8位为指数E，剩下23位为M&lt;br&gt;双精度浮点格式(64位)，&lt;code&gt;S=1 E=11 M=52&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;IEEE 754对有效数M和指数E有一些特别规定&lt;/strong&gt;&lt;br&gt;前面说过有效数M &lt;code&gt;1 ≤ M ≤ 2&lt;/code&gt;，也就是说M第1位始终是1，因此默认可以把这个1舍出，等读取的时候再把这个1加上。例如1.0110011 实际存储0110011，这样做的好处是多了一位来存放有效数。&lt;/p&gt;
+&lt;p&gt;E是2的幂是无符号整数，E为8位时取值范围0-255，E为11位时取值范围0-2047，科学计数法中E是可以为负的，规定在保存指数时要加上一个偏移码，读取时再通过指数减去这个偏移码。8位时为127，11位时为1023。例如2^2，假设为单精度，这时E=2，2+127=129，即10000001，读取的时候通过129-127 E=2&lt;/p&gt;
+&lt;p&gt;1、指数不全为0或不全为1时，就采用上面的规则&lt;br&gt;2、指数全为0，指数值E=1-127 (1023)，而有效数的值M，不包含隐含的开头的1。这样做是为了表示数值0的方法，表示那些非常接近于0.0的数&lt;br&gt;3、指数全为1，有效数全为0时，得到的值表示无穷，s=1表示负无穷，s=0表示正无穷，如果有效数不全为0，表示NaN，就是“不是一个数(Not a Number)”&lt;/p&gt;
+&lt;p&gt;现在把0.58写成二进制形式（单精度）&lt;br&gt;二进制小数为 &lt;code&gt;0.100101000111101011100001&lt;/code&gt;&lt;br&gt;有效数 &lt;code&gt;1.00101000111101011100001&lt;/code&gt;&lt;br&gt;指数 &lt;code&gt;-1 + 127&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;s = 0&lt;/code&gt;&lt;br&gt;&lt;code&gt;E = 01111110&lt;/code&gt;&lt;br&gt;&lt;code&gt;M = 00101000111101011100001&lt;/code&gt;&lt;br&gt;二进制表示就是 &lt;code&gt;0 01111110 001 0100 0111 1010 1110 0001&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;M = 00101000111101011100001&lt;/code&gt; 转换之后等于 &lt;code&gt;1.15999996662139892578125&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;-1^0 * 1.15999996662139892578125 * 2^(-1) = 0.579999983310699462890625&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight php&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$a = &lt;span class=&quot;number&quot;&gt;0.58&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$b = &lt;span class=&quot;number&quot;&gt;100&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$c = $a * $b &lt;span class=&quot;comment&quot;&gt;// 57.99999...&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;var_dump(intval($c)); &lt;span class=&quot;comment&quot;&gt;//intval后自然就等于57了&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;看了鸟哥博客的&lt;a href=&quot;http://www.laruence.com/2013/03/26/2884.html&quot; title=&quot;PHP浮点数的一个常见问题的解答&quot;&gt;一篇文章&lt;/a&gt;后，对IEEE754浮点数表示不太明白。&lt;/p&gt;
+&lt;figure class=&quot;highlight php&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$a = &lt;span class=&quot;number&quot;&gt;0.58&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$b = &lt;span class=&quot;number&quot;&gt;100&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;var_dump(intval($a * $b)); &lt;span class=&quot;comment&quot;&gt;//输出57&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;为什么是57，这就得知道浮点数的二进制表示了称之为国际标准IEEE 754&lt;/p&gt;
+&lt;p&gt;在网上看了几篇文章，看了《深入理解计算机原理》2.4章浮点数之后对浮点数的二进制表示有了些理解，做下记录。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="二进制" scheme="http://haov.net/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>AmazonAws云服务使用</title>
+    <link href="http://haov.net/2014/AmazonAws%E4%BA%91%E6%9C%8D%E5%8A%A1%E4%BD%BF%E7%94%A8/"/>
+    <id>http://haov.net/2014/AmazonAws云服务使用/</id>
+    <published>2014-11-17T11:38:46.000Z</published>
+    <updated>2015-11-10T07:41:26.000Z</updated>
+    
+    <content type="html">&lt;p&gt;最近项目要上google play，使用amazon aws云服务。&lt;/p&gt;
+&lt;p&gt;我们项目主要使用了ec2，rds，s3&lt;/p&gt;
+&lt;p&gt;###ec2服务器的登陆&lt;br&gt;linux下&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;windows下&lt;br&gt;推荐使用&lt;a href=&quot;http://www.netsarang.com/products/xsh_overview.html&quot; title=&quot;xshell&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;xshell&lt;/a&gt;，xshell可以直接使用public key&lt;/p&gt;
+&lt;p&gt;在用户身份验证项，类型选择public key，用户名ec2-user，用户密钥就是在amazonaws生成的xxx.pem文件&lt;/p&gt;
+&lt;p&gt;往服务器传文件可以使用scp&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ scp -i xxx.pem test.log ec2-user@xxx.compute.amazonaws.com:/tmp&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;p&gt;###登陆服务器后需要挂载硬盘&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ fdisk &lt;span class=&quot;_&quot;&gt;-l&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mkfs -t ext3 /dev/xvdb&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mkdir /data&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mount /dev/xvdb /data&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;###rds登陆&lt;/p&gt;
+&lt;p&gt;对于mysql的管理在windows下推荐使用&lt;a href=&quot;https://www.webyog.com/&quot; title=&quot;SQLyog&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;SQLyog&lt;/a&gt;，相当的好用。&lt;/p&gt;
+&lt;p&gt;登陆亚马逊的rds需要使用http隧道的方式，用http的方式有一点不太方便的就是需要php环境的支持&lt;/p&gt;
+&lt;p&gt;###s3&lt;br&gt;我们使用s3主要是游戏包的更新下载&lt;/p&gt;
+&lt;p&gt;文件上传在amazonaws面板进行，上传完成后看到的是一个私有的链接，需要手动创建公开链接，文件点击右键，点击make public之后就得到可以对外的公开链接。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近项目要上google play，使用amazon aws云服务。&lt;/p&gt;
+&lt;p&gt;我们项目主要使用了ec2，rds，s3&lt;/p&gt;
+&lt;p&gt;###ec2服务器的登陆&lt;br&gt;linux下&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;windows下&lt;br&gt;推荐使用&lt;a href=&quot;http://www.netsarang.com/products/xsh_overview.html&quot; title=&quot;xshell&quot;&gt;xshell&lt;/a&gt;，xshell可以直接使用public key&lt;/p&gt;
+&lt;p&gt;在用户身份验证项，类型选择public key，用户名ec2-user，用户密钥就是在amazonaws生成的xxx.pem文件&lt;/p&gt;
+&lt;p&gt;往服务器传文件可以使用scp&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ scp -i xxx.pem test.log ec2-user@xxx.compute.amazonaws.com:/tmp&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="amazon" scheme="http://haov.net/tags/amazon/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>hello-world</title>
+    <link href="http://haov.net/2014/hello-world/"/>
+    <id>http://haov.net/2014/hello-world/</id>
+    <published>2014-11-17T11:29:26.000Z</published>
+    <updated>2016-04-09T07:10:19.000Z</updated>
+    
+    <content type="html">&lt;p&gt;经过一系列的折腾，博客终于在github上搭建好了。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;经过一系列的折腾，博客终于在github上搭建好了。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="github" scheme="http://haov.net/tags/github/"/>
+    
+  </entry>
+  
+</feed>
