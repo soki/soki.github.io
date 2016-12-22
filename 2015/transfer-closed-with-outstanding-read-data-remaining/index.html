@@ -2,8 +2,9 @@
 <p>经过一翻google发现了一些可能引起错误的原因</p>
 <p><strong>Expect: 100-continue</strong></p>
 <blockquote>
-<p>当客户端要post较大的数据时，客户端会先发送一个包含 Expect: 100-continue 的头信息，询问服务器是否接受请求，如果接受，服务器返回100-continue，客户端再post数据。<br><a id="more"></a><br>我们post的数据才几十字节而已，这个问题基本可以忽略。</p>
 </blockquote>
+<p>当客户端要post较大的数据时，客户端会先发送一个包含 Expect: 100-continue 的头信息，询问服务器是否接受请求，如果接受，服务器返回100-continue，客户端再post数据。<br>我们post的数据才几十字节而已，这个问题基本可以忽略。</p>
+<a id="more"></a>
 <p>继续排查</p>
 <p>经过调试发现在浏览器上请求接口正常，而curl请求始终失败出错。经过对比头信息，发现浏览器上多了 <code>Content-Encoding:gzip</code> 头，<code>curl</code> 启用 <code>-compressed</code> 参数后也正常了。</p>
 <p>客户端查看代码确实也没有启用<code>gzip</code>，加上<code>gzip</code>，更新版本，问题玩家登录一切正常，问题解决。</p>

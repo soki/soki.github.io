@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://haov.net/"/>
-  <updated>2016-04-09T09:27:38.000Z</updated>
+  <updated>2016-06-24T08:34:31.000Z</updated>
   <id>http://haov.net/</id>
   
   <author>
@@ -20,14 +20,15 @@
     <link href="http://haov.net/2015/MySQL-server-has-gone-away/"/>
     <id>http://haov.net/2015/MySQL-server-has-gone-away/</id>
     <published>2015-04-09T08:21:48.000Z</published>
-    <updated>2016-04-09T09:27:38.000Z</updated>
+    <updated>2016-06-24T08:34:31.000Z</updated>
     
     <content type="html">&lt;p&gt;在测试服务器上发现一个php守护进程异常退出，查看日志发现报了&lt;code&gt;Warning: PDO::prepare(): MySQL server has gone away&lt;/code&gt; 的错误&lt;/p&gt;
 &lt;p&gt;一番查找发现有几种情况会出现这个错误。&lt;br&gt;1、MySQL服务器宕机&lt;br&gt;2、连接长时间没有操作，MySQL发现连接超过wait_timeout所配置的时间，MySQL就会关闭这个连接&lt;br&gt;可以通过命令 &lt;code&gt;SHOW GLOBAL VARIABLES LIKE &amp;quot;%timeout&amp;quot;&lt;/code&gt; 查看 wait_timeout参数&lt;br&gt;3、当查询的结果集超过了max_allowed_packet设置的大小&lt;/p&gt;
 &lt;p&gt;MySQL服务正常第一条可以排除&lt;br&gt;max_allowed_packet 配置是16M，查询的数据肯定不会超过这个大小也可以排除&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;发现问题&lt;/strong&gt;&lt;br&gt;php使用的是PDO操作数据库，php在脚本结束时会自动关闭连接，应该不会有超时的问题&lt;br&gt;出问题的正好是守护进程，通过查看代码，发现代码里有缓存PDO对象，php又是以守护进程的方式运行，连接MySQL之后并不会去关闭连接，在没有操作时连接会一直处在睡眠状态。&lt;br&gt;当守护进程启动后，通过 &lt;code&gt;SHOW PROCESSLIST&lt;/code&gt; 可以看到状态为Sleep&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;发现问题&quot;&gt;&lt;a href=&quot;#发现问题&quot; class=&quot;headerlink&quot; title=&quot;发现问题&quot;&gt;&lt;/a&gt;发现问题&lt;/h3&gt;&lt;p&gt;php使用的是PDO操作数据库，php在脚本结束时会自动关闭连接，应该不会有超时的问题&lt;br&gt;出问题的正好是守护进程，通过查看代码，发现代码里有缓存PDO对象，php又是以守护进程的方式运行，连接MySQL之后并不会去关闭连接，在没有操作时连接会一直处在睡眠状态。&lt;br&gt;当守护进程启动后，通过 &lt;code&gt;SHOW PROCESSLIST&lt;/code&gt; 可以看到状态为Sleep&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
 &lt;p&gt;测试服在晚上时基本没有操作，这样超过28800秒之后MySQL关闭了这个连接，当php再次处理数据时就报出了上面的错误。&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;解决问题&lt;/strong&gt;&lt;br&gt;my.conf文件修改参数&lt;br&gt;wait_timeout=86400&lt;/p&gt;
+&lt;h3 id=&quot;解决问题&quot;&gt;&lt;a href=&quot;#解决问题&quot; class=&quot;headerlink&quot; title=&quot;解决问题&quot;&gt;&lt;/a&gt;解决问题&lt;/h3&gt;&lt;p&gt;my.conf文件修改参数&lt;br&gt;wait_timeout=86400&lt;/p&gt;
 &lt;p&gt;相关问题&lt;br&gt;&lt;a href=&quot;http://stackoverflow.com/questions/7942154/mysql-error-2006-mysql-server-has-gone-away&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://stackoverflow.com/questions/7942154/mysql-error-2006-mysql-server-has-gone-away&lt;/a&gt;&lt;/p&gt;
 </content>
     
@@ -36,7 +37,7 @@
       &lt;p&gt;在测试服务器上发现一个php守护进程异常退出，查看日志发现报了&lt;code&gt;Warning: PDO::prepare(): MySQL server has gone away&lt;/code&gt; 的错误&lt;/p&gt;
 &lt;p&gt;一番查找发现有几种情况会出现这个错误。&lt;br&gt;1、MySQL服务器宕机&lt;br&gt;2、连接长时间没有操作，MySQL发现连接超过wait_timeout所配置的时间，MySQL就会关闭这个连接&lt;br&gt;可以通过命令 &lt;code&gt;SHOW GLOBAL VARIABLES LIKE &amp;quot;%timeout&amp;quot;&lt;/code&gt; 查看 wait_timeout参数&lt;br&gt;3、当查询的结果集超过了max_allowed_packet设置的大小&lt;/p&gt;
 &lt;p&gt;MySQL服务正常第一条可以排除&lt;br&gt;max_allowed_packet 配置是16M，查询的数据肯定不会超过这个大小也可以排除&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;发现问题&lt;/strong&gt;&lt;br&gt;php使用的是PDO操作数据库，php在脚本结束时会自动关闭连接，应该不会有超时的问题&lt;br&gt;出问题的正好是守护进程，通过查看代码，发现代码里有缓存PDO对象，php又是以守护进程的方式运行，连接MySQL之后并不会去关闭连接，在没有操作时连接会一直处在睡眠状态。&lt;br&gt;当守护进程启动后，通过 &lt;code&gt;SHOW PROCESSLIST&lt;/code&gt; 可以看到状态为Sleep&lt;br&gt;
+&lt;h3 id=&quot;发现问题&quot;&gt;&lt;a href=&quot;#发现问题&quot; class=&quot;headerlink&quot; title=&quot;发现问题&quot;&gt;&lt;/a&gt;发现问题&lt;/h3&gt;&lt;p&gt;php使用的是PDO操作数据库，php在脚本结束时会自动关闭连接，应该不会有超时的问题&lt;br&gt;出问题的正好是守护进程，通过查看代码，发现代码里有缓存PDO对象，php又是以守护进程的方式运行，连接MySQL之后并不会去关闭连接，在没有操作时连接会一直处在睡眠状态。&lt;br&gt;当守护进程启动后，通过 &lt;code&gt;SHOW PROCESSLIST&lt;/code&gt; 可以看到状态为Sleep&lt;/p&gt;
     
     </summary>
     
@@ -50,14 +51,15 @@
     <link href="http://haov.net/2015/transfer-closed-with-outstanding-read-data-remaining/"/>
     <id>http://haov.net/2015/transfer-closed-with-outstanding-read-data-remaining/</id>
     <published>2015-02-13T08:22:53.000Z</published>
-    <updated>2016-04-09T08:15:01.000Z</updated>
+    <updated>2016-06-24T08:35:43.000Z</updated>
     
     <content type="html">&lt;p&gt;最近有个别用户反映一直进不去游戏，卡在登录画面。经过排查发现客户端调用某接口的时候数据获取不全，通过抓包发现只要获取到一定数据量时，客户端就主动把连接关闭。客户端使用libcurl，所以我在命令行里也用curl模拟了一次请求，发现也是在获取到一定的数据后就出现 &lt;code&gt;transfer closed with outstanding read data remaining&lt;/code&gt; 的错误，而且还是必现。&lt;/p&gt;
 &lt;p&gt;经过一翻google发现了一些可能引起错误的原因&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Expect: 100-continue&lt;/strong&gt;&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;当客户端要post较大的数据时，客户端会先发送一个包含 Expect: 100-continue 的头信息，询问服务器是否接受请求，如果接受，服务器返回100-continue，客户端再post数据。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;我们post的数据才几十字节而已，这个问题基本可以忽略。&lt;/p&gt;
 &lt;/blockquote&gt;
+&lt;p&gt;当客户端要post较大的数据时，客户端会先发送一个包含 Expect: 100-continue 的头信息，询问服务器是否接受请求，如果接受，服务器返回100-continue，客户端再post数据。&lt;br&gt;我们post的数据才几十字节而已，这个问题基本可以忽略。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
 &lt;p&gt;继续排查&lt;/p&gt;
 &lt;p&gt;经过调试发现在浏览器上请求接口正常，而curl请求始终失败出错。经过对比头信息，发现浏览器上多了 &lt;code&gt;Content-Encoding:gzip&lt;/code&gt; 头，&lt;code&gt;curl&lt;/code&gt; 启用 &lt;code&gt;-compressed&lt;/code&gt; 参数后也正常了。&lt;/p&gt;
 &lt;p&gt;客户端查看代码确实也没有启用&lt;code&gt;gzip&lt;/code&gt;，加上&lt;code&gt;gzip&lt;/code&gt;，更新版本，问题玩家登录一切正常，问题解决。&lt;/p&gt;
@@ -71,7 +73,8 @@
 &lt;p&gt;经过一翻google发现了一些可能引起错误的原因&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Expect: 100-continue&lt;/strong&gt;&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;当客户端要post较大的数据时，客户端会先发送一个包含 Expect: 100-continue 的头信息，询问服务器是否接受请求，如果接受，服务器返回100-continue，客户端再post数据。&lt;br&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;当客户端要post较大的数据时，客户端会先发送一个包含 Expect: 100-continue 的头信息，询问服务器是否接受请求，如果接受，服务器返回100-continue，客户端再post数据。&lt;br&gt;我们post的数据才几十字节而已，这个问题基本可以忽略。&lt;/p&gt;
     
     </summary>
     
@@ -85,7 +88,7 @@
     <link href="http://haov.net/2014/%E6%B5%AE%E7%82%B9%E6%95%B0%E4%BA%8C%E8%BF%9B%E5%88%B6%E8%A1%A8%E7%A4%BA/"/>
     <id>http://haov.net/2014/浮点数二进制表示/</id>
     <published>2014-12-11T07:42:11.000Z</published>
-    <updated>2016-04-09T10:01:23.000Z</updated>
+    <updated>2016-06-24T08:36:51.000Z</updated>
     
     <content type="html">&lt;p&gt;看了鸟哥博客的&lt;a href=&quot;http://www.laruence.com/2013/03/26/2884.html&quot; title=&quot;PHP浮点数的一个常见问题的解答&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;一篇文章&lt;/a&gt;后，对IEEE754浮点数表示不太明白。&lt;/p&gt;
 &lt;figure class=&quot;highlight php&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$a = &lt;span class=&quot;number&quot;&gt;0.58&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$b = &lt;span class=&quot;number&quot;&gt;100&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;var_dump(intval($a * $b)); &lt;span class=&quot;comment&quot;&gt;//输出57&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
@@ -129,18 +132,17 @@
     <link href="http://haov.net/2014/AmazonAws%E4%BA%91%E6%9C%8D%E5%8A%A1%E4%BD%BF%E7%94%A8/"/>
     <id>http://haov.net/2014/AmazonAws云服务使用/</id>
     <published>2014-11-17T11:38:46.000Z</published>
-    <updated>2016-04-09T09:19:48.000Z</updated>
+    <updated>2016-06-24T08:39:44.000Z</updated>
     
     <content type="html">&lt;p&gt;最近项目要上google play，使用amazon aws云服务。&lt;/p&gt;
 &lt;p&gt;我们项目主要使用了ec2，rds，s3&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;ec2服务器的登陆&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;linux&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;ec2服务器的登陆&lt;/strong&gt;&lt;br&gt;linux&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;windows&lt;/p&gt;
 &lt;p&gt;推荐使用&lt;a href=&quot;http://www.netsarang.com/products/xsh_overview.html&quot; title=&quot;xshell&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;xshell&lt;/a&gt;，xshell可以直接使用public key&lt;/p&gt;
 &lt;p&gt;在用户身份验证项，类型选择public key，用户名ec2-user，用户密钥就是在amazonaws生成的xxx.pem文件&lt;/p&gt;
-&lt;p&gt;往服务器传文件可以使用scp&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ scp -i xxx.pem test.log ec2-user@xxx.compute.amazonaws.com:/tmp&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;往服务器传文件可以使用scp&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;scp -i xxx.pem test.log ec2-user@xxx.compute.amazonaws.com:/tmp&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;p&gt;&lt;strong&gt;登陆服务器后需要挂载硬盘&lt;/strong&gt;&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ fdisk &lt;span class=&quot;_&quot;&gt;-l&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mkfs -t ext3 /dev/xvdb&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mkdir /data&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ mount /dev/xvdb /data&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;登陆服务器后需要挂载硬盘&lt;/strong&gt;&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;fdisk &lt;span class=&quot;_&quot;&gt;-l&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;mkfs -t ext3 /dev/xvdb&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;mkdir /data&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;mount /dev/xvdb /data&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;rds登陆&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;对于mysql的管理在windows下推荐使用&lt;a href=&quot;https://www.webyog.com/&quot; title=&quot;SQLyog&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;SQLyog&lt;/a&gt;，相当的好用。&lt;/p&gt;
 &lt;p&gt;登陆亚马逊的rds需要使用http隧道的方式，用http的方式需要php环境的支持&lt;/p&gt;
@@ -152,12 +154,11 @@
     
       &lt;p&gt;最近项目要上google play，使用amazon aws云服务。&lt;/p&gt;
 &lt;p&gt;我们项目主要使用了ec2，rds，s3&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;ec2服务器的登陆&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;linux&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;$ sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;ec2服务器的登陆&lt;/strong&gt;&lt;br&gt;linux&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;chmod 400 xxx.pem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;ssh -i xxx.pem ec2-user@xxx.compute.amazonaws.com&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;sudo su&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;windows&lt;/p&gt;
 &lt;p&gt;推荐使用&lt;a href=&quot;http://www.netsarang.com/products/xsh_overview.html&quot; title=&quot;xshell&quot;&gt;xshell&lt;/a&gt;，xshell可以直接使用public key&lt;/p&gt;
 &lt;p&gt;在用户身份验证项，类型选择public key，用户名ec2-user，用户密钥就是在amazonaws生成的xxx.pem文件&lt;/p&gt;
-&lt;p&gt;往服务器传文件可以使用scp&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ scp -i xxx.pem test.log ec2-user@xxx.compute.amazonaws.com:/tmp&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;往服务器传文件可以使用scp&lt;br&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;scp -i xxx.pem test.log ec2-user@xxx.compute.amazonaws.com:/tmp&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
     
     </summary>
     
