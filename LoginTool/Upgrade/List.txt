@@ -1,0 +1,12 @@
+.\data\lsDefaultItemFilter.txt	acb0e9a2002543bd6639154f18d1f99f	http://b.haov.net/LoginTool/Upgrade/lsDefaultItemFilter.txt
+.\data\ItemDesc.dat	73c3d7c6c67c9a32d0b9c1821835319c	http://b.haov.net/LoginTool/Upgrade/ItemDesc.txt
+.\data\Items2.wil	12ce22507a5c490b987fe5152cdb9349	http://b.haov.net/LoginTool/Upgrade/Items2.txt
+.\data\Items2.wix	339ac652421623a1a6ce382481487b20	http://b.haov.net/LoginTool/Upgrade/Items21.txt
+.\data\DnItems2.wil	5b28c53ed9f8f09ff3d3b3a19f4d5284	http://b.haov.net/LoginTool/Upgrade/DnItems2.txt
+.\data\DnItems2.wix	b76e227147cc4ceaafc0ecf1abc99521	http://b.haov.net/LoginTool/Upgrade/DnItems21.txt
+.\data\StateItem2.wil	dd8ad654b729eeb12875839815ba006b	http://b.haov.net/LoginTool/Upgrade/StateItem2.txt
+.\data\StateItem2.wix	bc4fcffe8838fdc5c773c48ccff6654f	http://b.haov.net/LoginTool/Upgrade/StateItem21.txt
+.\bluem2_client.dat	5DAFEDD7CF199295075BD3E1D32718CE	http://b.haov.net/LoginTool/Upgrade/bluem2_client.txt
+.\data\lui.pkg	0BDB38D7031FEF7A8EC46731BA093442	http://b.haov.net/LoginTool/Upgrade/lui.txt
+.\snappy32.dll	40FD71B13E3CBB90FFCBC0D50C7E1539	http://b.haov.net/LoginTool/Upgrade/snappy32.txt
+.\uipkg.dll	82DFF13BFE804B14B910627591F599B6	http://b.haov.net/LoginTool/Upgrade/uipkg.txt
